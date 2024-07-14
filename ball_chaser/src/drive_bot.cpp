@@ -24,7 +24,6 @@ class DBServicenPublisher
       _motor_cmd_publisher.publish(motor_cmd);
 
       res.msg_feedback = log;
-      // ROS_INFO_STREAM("Done " + res.msg_feedback);
       return true;
     }
 

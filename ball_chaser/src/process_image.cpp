@@ -15,27 +15,17 @@ class PIClientnSubcriber {
       _sub1 = _n.subscribe("/camera/rgb/image_raw", 10, &PIClientnSubcriber::process_image_callback, this);
 
       _client = _n.serviceClient<ball_chaser::DriveToTarget>("/ball_chaser/command_robot");
-
-      // ROS_INFO_STREAM("SLEEPING");
-      // ROS_INFO_STREAM("DONE SLEEPING");
-      // drive_robot(0.0, 0.2);
     }
 
     void process_image_callback(const sensor_msgs::Image& img) {
       int pixel_value = 255;
 
-
-      // std::string log = "Height - " + std::to_string(img.height) + " - Step - " + std::to_string(img.step);
-      // ROS_INFO_STREAM(log);
-
       bool found_pixel_val = false;
-      // int pos = -1;
       int column_found = -1;
       for (int i=0; i < (img.height * img.step); i++) {
         if (img.data[i] == pixel_value && img.data[i+1] == pixel_value && img.data[i+2] == pixel_value) { // Checks R, G, B val arranged consecutively
           found_pixel_val = true;
           column_found = i%img.step;
-          // pos = i;
           break;
         }
       }
@@ -110,9 +100,6 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "process_image");
 
   PIClientnSubcriber CASObject;
-  // ros::Duration(2).sleep();
-
-  // CASObject.drive_robot(0.0, 0.2);
 
   ROS_INFO_STREAM("RUNNING PROCESS_IMAGE_NODE");
 
