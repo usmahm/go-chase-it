@@ -2,6 +2,13 @@
 #include "ball_chaser/DriveToTarget.h"
 #include <sensor_msgs/Image.h>
 
+enum MOVE_STATE {
+  STOP,
+  LEFT,
+  RIGHT,
+  FORWARD,
+};
+
 class PIClientnSubcriber {
   public:
     PIClientnSubcriber() {
@@ -18,25 +25,67 @@ class PIClientnSubcriber {
       int pixel_value = 255;
 
 
-      std::string log = "Height - " + std::to_string(img.height) + " - Step - " + std::to_string(img.step);
-      ROS_INFO_STREAM(log);
+      // std::string log = "Height - " + std::to_string(img.height) + " - Step - " + std::to_string(img.step);
+      // ROS_INFO_STREAM(log);
 
       bool found_pixel_val = false;
-      int pos = -1;
+      // int pos = -1;
+      int column_found = -1;
       for (int i=0; i < (img.height * img.step); i++) {
-        if (img.data[i] == pixel_value) {
+        if (img.data[i] == pixel_value && img.data[i+1] == pixel_value && img.data[i+2] == pixel_value) { // Checks R, G, B val arranged consecutively
           found_pixel_val = true;
-          pos = i;
+          column_found = i%img.step;
+          // pos = i;
           break;
         }
       }
 
-      std::string log1 = "Found - " + std::to_string(found_pixel_val) + " - POS - " + std::to_string(pos);
-      ROS_INFO_STREAM(log1);
+      if (column_found != -1) {
+        MOVE_STATE move_state;
+        
+        if (column_found <= 700) { // Right
+          move_state = RIGHT;
+        } else if (column_found <= 1700) { //Center
+          move_state = FORWARD;
+        } else { // Left
+          move_state = LEFT;
+        }
+
+        if (move_state != prev_move) {
+          drive_robot(move_state);
+        }
+      } else if (moving) {
+        drive_robot(STOP);
+      }
     }
 
-    void drive_robot(float lin_x, float ang_z) {
-      ROS_INFO_STREAM("MOVING");
+    void drive_robot(MOVE_STATE move_state) {
+      float lin_x = 0.0;
+      float ang_z = 0.0;
+
+      std::string dir = "STOPPED";
+      switch (move_state)
+      {
+        case FORWARD:
+          lin_x = 0.5;
+          dir = "FORWARD";
+          break;
+        case LEFT:
+          ang_z = -0.7;
+          dir = "LEFT";
+          break;
+        case RIGHT:
+          ang_z = 0.7;
+          dir = "RIGHT";
+          break;
+        default:
+          break;
+      }
+
+      ROS_INFO_STREAM("Moving - " + dir);
+      prev_move = move_state;
+      
+
       ball_chaser::DriveToTarget srv;
 
       srv.request.linear_x = lin_x;
@@ -45,21 +94,25 @@ class PIClientnSubcriber {
       if (!_client.call(srv)) {
         ROS_ERROR("Failed to call command_robot service");
       }
+
+      moving = lin_x != 0.0 || ang_z != 0.0;
     }
 
   private:
     ros::NodeHandle _n;
     ros::ServiceClient _client;
     ros::Subscriber _sub1;
+    bool moving = false;
+    MOVE_STATE prev_move = STOP;
 };
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "process_image");
 
   PIClientnSubcriber CASObject;
-  ros::Duration(2).sleep();
+  // ros::Duration(2).sleep();
 
-  CASObject.drive_robot(0.0, 0.2);
+  // CASObject.drive_robot(0.0, 0.2);
 
   ROS_INFO_STREAM("RUNNING PROCESS_IMAGE_NODE");
 

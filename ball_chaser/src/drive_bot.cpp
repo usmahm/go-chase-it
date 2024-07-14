@@ -14,7 +14,7 @@ class DBServicenPublisher
     bool handler_drive_request(ball_chaser::DriveToTarget::Request &req, ball_chaser::DriveToTarget::Response &res) {
       geometry_msgs::Twist motor_cmd;
       
-      std::string log = "Moving with velocities linear_x - " + std::to_string(req.linear_x) + " angular_z - " + std::to_string(req.angular_z);
+      std::string log = "Moving with vel lin_x - " + std::to_string(req.linear_x) + " ang_z - " + std::to_string(req.angular_z);
 
       ROS_INFO_STREAM(log);
 
@@ -24,7 +24,7 @@ class DBServicenPublisher
       _motor_cmd_publisher.publish(motor_cmd);
 
       res.msg_feedback = log;
-      ROS_INFO_STREAM("Done " + res.msg_feedback);
+      // ROS_INFO_STREAM("Done " + res.msg_feedback);
       return true;
     }
 
@@ -39,6 +39,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "drive_bot");
 
   DBServicenPublisher SAPObject;
+
+  ROS_INFO_STREAM("RUNNING DRIVE_BOT_NODE");
 
   ros::spin();
   
